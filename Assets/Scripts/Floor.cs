@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class Floor : MonoBehaviour
 {
+    public long FloorNumber { get; set; }
+
     // Start is called before the first frame update
     void Start()
     {
