@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -40,7 +41,7 @@ public class Hero : MonoBehaviour
                 height = 32,
                 x = Screen.width / 2,
                 y = Screen.height - 32,
-            }, isOnGround ? "Ground" : "Air", guiStyle
+            }, (isOnGround ? "Ground" : "Air") + vx, guiStyle
         );
 
     }
@@ -54,29 +55,28 @@ public class Hero : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
-        float? platformTopMaybe;
-
-        isOnGround = GetComponent<GroundCheck>().Consume(out platformTopMaybe);
+        UpdatePosition();
 
         float absAccX = 1.0f / PPU;
 
-        // TODO: detect horizontal collision
+        CheckHorizontalWallCollision();
 
         // TODO: scroll up
 
         // TODO: judge fallen
 
-        bool standing = IsStanding();
+        float? standingFloorTopMaybe = StandingFloorTop();
+        bool standing = false;
 
-        if (standing)
+        if (standingFloorTopMaybe != null)
         {
             // TODO: update score
 
-            if (platformTopMaybe is float platformTopReal)
+            if (standingFloorTopMaybe is float standingFloorTop)
             {
-                fixYOnPlatform(platformTopReal);
+                fixYOnPlatform(standingFloorTop);
             }
             vy = 0;
 
@@ -85,43 +85,41 @@ public class Hero : MonoBehaviour
             {
                 jumpAccelerationCount = (int)(7 + Mathf.Abs(vx) * PPU / 4);
                 vy = VelocityYWhileJumping(jumpAccelerationCount);
-                standing = false;
+            }
+            else
+            {
+                standing = true;
             }
             absAccX = 1.5f / PPU;
         }
 
-        vx = Mathf.Clamp(vx + ComputeAccelerationX(absAccX, standing), -MAX_SPEED_X, MAX_SPEED_X);
+        isOnGround = standing;
 
-        if (!standing)
-        {
-            if (jumpAccelerationCount > 0)
-            {
-                vy = VelocityYWhileJumping(jumpAccelerationCount);
-                if (Keyboard.current.upArrowKey.isPressed)
-                {
-                    jumpAccelerationCount--;
-                }
-                else
-                {
-                    jumpAccelerationCount = 0;
-                }
 
-            }
-            else
-            {
-                vy += Gravity;
-                if (vy < TerminalVelocityY)
-                {
-                    vy = TerminalVelocityY;
-                }
-            }
-        }
+        ProcessHorizontalAcceleration(standing);
+        ProcessVerticalAcceleration(standing);
 
         // TODO: set direction
 
-        UpdatePosition();
 
 
+    }
+
+    private void CheckHorizontalWallCollision()
+    {
+        if ((transform.position.x - SpriteSize.x) < Global.TOWER_LEFT_WALL_X)
+        {
+            // collides with the left wall
+            SetPosition(Global.TOWER_LEFT_WALL_X + SpriteSize.x, null);
+            vx = -vx / 2.0f;
+        }
+
+        if (Global.TOWER_RIGHT_WALL_X < (transform.position.x + SpriteSize.x))
+        {
+            // collides with the right wall
+            SetPosition(Global.TOWER_RIGHT_WALL_X - SpriteSize.x, null);
+            vx = -vx / 2.0f;
+        }
     }
 
     private void fixYOnPlatform(float platformTop)
@@ -131,18 +129,17 @@ public class Hero : MonoBehaviour
         transform.position = pos;
     }
 
-    private void UpdatePosition()
+    private void ProcessHorizontalAcceleration(bool standing)
     {
-        Vector3 pos = transform.position;
-        pos.x += vx;
-        pos.y += vy;
-        transform.position = pos;
+        vx = Mathf.Clamp(vx + ComputeAccelerationX(standing), -MAX_SPEED_X, MAX_SPEED_X);
     }
 
-    private float ComputeAccelerationX(float absAccX, bool standing)
+    private float ComputeAccelerationX(bool standing)
     {
         bool left = Keyboard.current.leftArrowKey.isPressed;
         bool right = Keyboard.current.rightArrowKey.isPressed;
+
+        float absAccX = (standing ? 1.5f : 1.0f) / PPU;
 
         if (left && !right)
         {
@@ -170,9 +167,87 @@ public class Hero : MonoBehaviour
         return 0;
     }
 
-    private bool IsStanding()
+    private void ProcessVerticalAcceleration(bool standing)
     {
-        return vy <= 0 && isOnGround;
+        if (!standing)
+        {
+            if (jumpAccelerationCount > 0)
+            {
+                vy = VelocityYWhileJumping(jumpAccelerationCount);
+                if (Keyboard.current.upArrowKey.isPressed)
+                {
+                    jumpAccelerationCount--;
+                }
+                else
+                {
+                    jumpAccelerationCount = 0;
+                }
+
+            }
+            else
+            {
+                vy += Gravity;
+                if (vy < TerminalVelocityY)
+                {
+                    vy = TerminalVelocityY;
+                }
+            }
+        }
+    }
+
+    private void UpdatePosition()
+    {
+        Vector3 pos = transform.position;
+        pos.x += vx;
+        pos.y += vy;
+        transform.position = pos;
+    }
+
+    private void SetPosition(float? mx, float? my)
+    {
+        Vector3 pos = transform.position;
+        if (mx is float x)
+            pos.x = x;
+        if (mx is float y)
+            pos.y += vy;
+        transform.position = pos;
+    }
+
+
+
+    private float? StandingFloorTop()
+    {
+        if (vy > 0)
+        {
+            // going up
+            return null;
+        }
+        var myCollisionPoint = new Vector2()
+        {
+            x = transform.position.x,
+            y = transform.position.y - SpriteSize.y / 2,
+        };
+        var myCollisionSize = new Vector2()
+        {
+            x = SpriteSize.x,
+            y = 1.0f / PPU,
+        };
+        var colliders = Physics2D.OverlapBoxAll(myCollisionPoint, myCollisionSize, 0)
+                           .Where((c) => c.CompareTag("Floor"))
+                           .ToList();
+        if (colliders.Count() == 0)
+        {
+            return null;
+        }
+
+        return GetPlatformTop(colliders[0]);
+    }
+
+    private float GetPlatformTop(Collider2D collision)
+    {
+        float y = collision.gameObject.transform.position.y;
+        float height = collision.gameObject.GetComponent<SpriteRenderer>().bounds.size.y;
+        return y + height / 2;
     }
 
     private float VelocityYWhileJumping(int count) =>
