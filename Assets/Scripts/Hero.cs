@@ -16,6 +16,9 @@ public class Hero : MonoBehaviour
 
     public const float TerminalVelocityY = -16.0f / PPU;
 
+    public const float MIN_X = Global.TOWER_LEFT_WALL_X + 16.0f / PPU;
+    public const float MAX_X = Global.TOWER_RIGHT_WALL_X - 16.0f / PPU;
+
     // velocity X
     private float vx;
 
@@ -41,9 +44,14 @@ public class Hero : MonoBehaviour
                 height = 32,
                 x = Screen.width / 2,
                 y = Screen.height - 32,
-            }, (isOnGround ? "Ground" : "Air") + vx, guiStyle
+            }, (isOnGround ? "Ground" : "Air") + $" {DebugText()}", guiStyle
         );
 
+    }
+
+    private string DebugText()
+    {
+        return "";
     }
 
     // Start is called before the first frame update
@@ -58,8 +66,6 @@ public class Hero : MonoBehaviour
     void FixedUpdate()
     {
         UpdatePosition();
-
-        float absAccX = 1.0f / PPU;
 
         CheckHorizontalWallCollision();
 
@@ -90,7 +96,6 @@ public class Hero : MonoBehaviour
             {
                 standing = true;
             }
-            absAccX = 1.5f / PPU;
         }
 
         isOnGround = standing;
@@ -107,17 +112,17 @@ public class Hero : MonoBehaviour
 
     private void CheckHorizontalWallCollision()
     {
-        if ((transform.position.x - SpriteSize.x) < Global.TOWER_LEFT_WALL_X)
+        if (transform.position.x < MIN_X)
         {
             // collides with the left wall
-            SetPosition(Global.TOWER_LEFT_WALL_X + SpriteSize.x, null);
+            SetPosition(MIN_X, null);
             vx = -vx / 2.0f;
         }
 
-        if (Global.TOWER_RIGHT_WALL_X < (transform.position.x + SpriteSize.x))
+        if (MAX_X < transform.position.x)
         {
             // collides with the right wall
-            SetPosition(Global.TOWER_RIGHT_WALL_X - SpriteSize.x, null);
+            SetPosition(MAX_X, null);
             vx = -vx / 2.0f;
         }
     }
