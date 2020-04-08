@@ -23,6 +23,11 @@ public class Hero : MonoBehaviour
 
     private int jumpAccelerationCount;
 
+    private bool isOnGround = false;
+
+    private Vector3 SpriteSize =>
+        GetComponent<SpriteRenderer>().bounds.size;
+
     private void OnGUI()
     {
         var guiStyle = new GUIStyle();
@@ -35,7 +40,7 @@ public class Hero : MonoBehaviour
                 height = 32,
                 x = Screen.width / 2,
                 y = Screen.height - 32,
-            }, "Hello", guiStyle
+            }, isOnGround ? "Ground" : "Air", guiStyle
         );
 
     }
@@ -51,9 +56,10 @@ public class Hero : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        UpdatePosition();
+        float? platformTopMaybe;
 
-        bool standing = IsStanding();
+        isOnGround = GetComponent<GroundCheck>().Consume(out platformTopMaybe);
+
         float absAccX = 1.0f / PPU;
 
         // TODO: detect horizontal collision
@@ -62,12 +68,16 @@ public class Hero : MonoBehaviour
 
         // TODO: judge fallen
 
-
+        bool standing = IsStanding();
 
         if (standing)
         {
             // TODO: update score
 
+            if (platformTopMaybe is float platformTopReal)
+            {
+                fixYOnPlatform(platformTopReal);
+            }
             vy = 0;
 
             // jump has started?
@@ -108,17 +118,25 @@ public class Hero : MonoBehaviour
         }
 
         // TODO: set direction
-        
 
+        UpdatePosition();
+
+
+    }
+
+    private void fixYOnPlatform(float platformTop)
+    {
+        Vector3 pos = transform.position;
+        pos.y = platformTop + SpriteSize.y / 2 - 8 / PPU;
+        transform.position = pos;
     }
 
     private void UpdatePosition()
     {
-        Vector3 pos;
-        pos = GetComponent<Transform>().position;
+        Vector3 pos = transform.position;
         pos.x += vx;
         pos.y += vy;
-        GetComponent<Transform>().position = pos;
+        transform.position = pos;
     }
 
     private float ComputeAccelerationX(float absAccX, bool standing)
@@ -154,8 +172,7 @@ public class Hero : MonoBehaviour
 
     private bool IsStanding()
     {
-        // TODO: implement
-        return transform.position.y <= 0;
+        return vy <= 0 && isOnGround;
     }
 
     private float VelocityYWhileJumping(int count) =>
