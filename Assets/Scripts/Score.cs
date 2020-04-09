@@ -15,9 +15,11 @@ public class Score : MonoBehaviour
         set
         {
             floor = value;
-            scoreTextObject.GetComponent<Text>().text = $"{floor,4} F";
+            scoreTextObject.GetComponent<Text>().text = $"{floor,4} F / Level {Speed}";
         }
     }
+
+    public long Speed { get; set; }
 
 
     // Start is called before the first frame update

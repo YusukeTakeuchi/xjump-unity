@@ -17,6 +17,8 @@ public class Tower : MonoBehaviour
 
     public const float BOTTOM_FLOOR_Y = -3.0f;
     public const float FLOOR_INTERVAL = 160.0f / PPU;
+    public const float FALL_HEIGHT = 16.0f / PPU;
+
     // indicates the area where objects are available by
     // designating the length from the center of the camera
     public const float PRESENTATION_HEIGHT = 4.8f;
@@ -71,6 +73,10 @@ public class Tower : MonoBehaviour
             fallCount = 0;
             Fall();
         }
+
+        GameObject.FindWithTag("Score").GetComponent<Score>().Speed = fallingSpeed;
+
+
     }
 
     private void PrepareAvailableFloors()
@@ -161,7 +167,7 @@ public class Tower : MonoBehaviour
         PrepareAvailableFloors();
         CleanUnavailableFloors();
         var position = mainCamera.transform.position;
-        position.y += 0.08f;
+        position.y += FALL_HEIGHT;
         mainCamera.transform.position = position;
     }
 
