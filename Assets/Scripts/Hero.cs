@@ -69,21 +69,18 @@ public class Hero : MonoBehaviour
 
         CheckHorizontalWallCollision();
 
-        // TODO: scroll up
-
         // TODO: judge fallen
 
-        float? standingFloorTopMaybe = StandingFloorTop();
+        //float? standingFloorTopMaybe = StandingFloorTop();
+        GameObject standingFloor = GetStandingFloor();
         bool standing = false;
 
-        if (standingFloorTopMaybe != null)
+        if (standingFloor != null)
         {
-            // TODO: update score
+            // update score
+            FloorReached(standingFloor);
 
-            if (standingFloorTopMaybe is float standingFloorTop)
-            {
-                fixYOnPlatform(standingFloorTop);
-            }
+            fixYOnPlatform(GetFloorTopY(standingFloor));
             vy = 0;
 
             // jump has started?
@@ -220,7 +217,7 @@ public class Hero : MonoBehaviour
 
 
 
-    private float? StandingFloorTop()
+    private GameObject GetStandingFloor()
     {
         if (vy > 0)
         {
@@ -245,17 +242,23 @@ public class Hero : MonoBehaviour
             return null;
         }
 
-        return GetPlatformTop(colliders[0]);
+        return colliders[0].gameObject;
     }
 
-    private float GetPlatformTop(Collider2D collision)
+    private float GetFloorTopY(GameObject gameObject)
     {
-        float y = collision.gameObject.transform.position.y;
-        float height = collision.gameObject.GetComponent<SpriteRenderer>().bounds.size.y;
+        float y = gameObject.transform.position.y;
+        float height = gameObject.GetComponent<SpriteRenderer>().bounds.size.y;
         return y + height / 2;
     }
 
     private float VelocityYWhileJumping(int count) =>
         (count / 2.0f + 12) / PPU;
 
+    private void FloorReached(GameObject floor)
+    {
+        long floorNum = floor.GetComponent<Floor>().FloorNumber;
+        var score = GameObject.FindWithTag("Score");
+        score.GetComponent<Score>().ReachFloor(floorNum);
+    }
 }
