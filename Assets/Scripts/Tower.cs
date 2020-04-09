@@ -5,9 +5,6 @@ using Lib.PositionUtil;
 
 public class Tower : MonoBehaviour
 {
-    private GameObject floorPrefab;
-    private GameObject hero;
-
     public const float PPU = Global.PPU;
 
     public const long FALLING_SPEED_MAX = 4999;
@@ -24,12 +21,12 @@ public class Tower : MonoBehaviour
     public const float PRESENTATION_HEIGHT = 4.8f;
     public const float CAMERA_WRAP_LIMIT = 9.6f;
 
-    public const float BOOST_OFFSET = 1.6f;
+    public const float BOOST_OFFSET = 2.4f;
+    public const float DEATH_OFFSET = -3.2f;
 
     private GameObject mainCamera;
 
     private long bottomFloorNumber;
-    //private long lastCreatedFloorNumber;
     private long nextFloorNumberToCreate;
 
     public long InitialFallingSpeed;
@@ -37,13 +34,16 @@ public class Tower : MonoBehaviour
     private long fallingSpeed = 0;
     private long fallCount = 0;
 
+    private GameObject floorPrefab;
+    private Global global;
+
     private readonly Queue<GameObject> floors = new Queue<GameObject>();
 
     // Start is called before the first frame update
     void Start()
     {
         floorPrefab = Resources.Load("Prefabs/Floor") as GameObject;
-        hero = GameObject.FindWithTag("Hero");
+        global = Global.GetInstance() ;
 
         mainCamera = Camera.main.gameObject;
 
@@ -68,13 +68,26 @@ public class Tower : MonoBehaviour
             fallCount -= FALL_COUNT_LIMIT;
             Fall();            
         }
-        if (hero.PosY() > mainCamera.PosY() + BOOST_OFFSET)
+
+        float heroY = global.Hero.gameObject.PosY();
+        if (heroY > mainCamera.PosY() + BOOST_OFFSET)
         {
+            // boost
             fallCount = 0;
             Fall();
         }
+        if (heroY < mainCamera.PosY() + DEATH_OFFSET)
+        {
+            // death
+            global.Score.Gameover();
+        }
 
-        GameObject.FindWithTag("Score").GetComponent<Score>().Speed = fallingSpeed;
+        if (mainCamera.transform.position.y > CAMERA_WRAP_LIMIT)
+        {
+            WrapTowerScrolling();
+        }
+
+        global.Score.Speed = fallingSpeed;
 
 
     }
@@ -166,9 +179,7 @@ public class Tower : MonoBehaviour
     {
         PrepareAvailableFloors();
         CleanUnavailableFloors();
-        var position = mainCamera.transform.position;
-        position.y += FALL_HEIGHT;
-        mainCamera.transform.position = position;
+        MoveVertical(mainCamera, FALL_HEIGHT);
     }
 
     // The available range is the area where floors are prepared
@@ -177,6 +188,42 @@ public class Tower : MonoBehaviour
         float cameraY = mainCamera.transform.position.y;
         minY = cameraY - PRESENTATION_HEIGHT;
         maxY = cameraY + PRESENTATION_HEIGHT;
+    }
 
+    private void WrapTowerScrolling()
+    {
+        if (floors.Count == 0)
+        {
+            return;
+        }
+        var bottomFloor = floors.Peek();
+        bottomFloorNumber = bottomFloor.GetComponent<Floor>().FloorNumber;
+
+        float delta = BOTTOM_FLOOR_Y - bottomFloor.PosY();
+
+        // duplicate floors
+        var floorsCopy = floors.ToArray();
+        floors.Clear();
+        foreach (var floor in floorsCopy)
+        {
+            long floorNum = floor.GetComponent<Floor>().FloorNumber;
+            CreateFloor(
+                floorNum,
+                floor.PosX(),
+                GetYForFloorNumber(floorNum),
+                floor.GetComponent<SpriteRenderer>().size.x
+            );
+            Destroy(floor);
+        }
+
+        MoveVertical(mainCamera, delta);
+        MoveVertical(global.Hero.gameObject, delta);
+    }
+
+    public void MoveVertical(GameObject obj, float delta)
+    {
+        var pos = obj.transform.position;
+        pos.y += delta;
+        obj.transform.position = pos;
     }
 }

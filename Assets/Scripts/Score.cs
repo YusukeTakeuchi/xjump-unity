@@ -6,6 +6,8 @@ using UnityEngine.UI;
 
 public class Score : MonoBehaviour
 {
+    private GameObject gameOverCanvasPrefab;
+
     private GameObject scoreTextObject;
 
     private long floor;
@@ -15,18 +17,22 @@ public class Score : MonoBehaviour
         set
         {
             floor = value;
-            scoreTextObject.GetComponent<Text>().text = $"{floor,4} F / Level {Speed}";
+            SetScoreText($"{floor,4} F / Level {Speed/100}");
         }
     }
 
     public long Speed { get; set; }
 
+    public bool gameOver;
+
 
     // Start is called before the first frame update
     void Start()
     {
+        gameOverCanvasPrefab = Resources.Load("Prefabs/GameOverCanvas") as GameObject;
         scoreTextObject = GameObject.Find("ScoreText");
         this.Floor = 0;
+        this.gameOver = false;
     }
 
     // Update is called once per frame
@@ -38,5 +44,22 @@ public class Score : MonoBehaviour
     public void ReachFloor(long floorNumber)
     {
         this.Floor = Math.Max(this.Floor, floorNumber);
+    }
+
+    public void Gameover()
+    {
+        this.gameOver = true;
+
+        var global = Global.GetInstance();
+        Destroy(global.Hero.gameObject);
+        Destroy(global.Tower.gameObject);
+
+        // show "GAME OVER"
+        Instantiate(gameOverCanvasPrefab);
+    }
+
+    private void SetScoreText(string text)
+    {
+        scoreTextObject.GetComponent<Text>().text = text;
     }
 }
