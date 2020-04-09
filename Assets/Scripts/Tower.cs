@@ -7,10 +7,10 @@ public class Tower : MonoBehaviour
 {
     public const float PPU = Global.PPU;
 
-    public const long FALLING_SPEED_MAX = 4999;
+    public const long FALLING_SPEED_MAX = 14999;
     public const long FALL_COUNT_LIMIT = 20000;
 
-    public const int BIG_FLOOR_INTERVAL = 5;
+    public const int BIG_FLOOR_INTERVAL = 50;
 
     public const float BOTTOM_FLOOR_Y = -3.0f;
     public const float FLOOR_INTERVAL = 160.0f / PPU;
@@ -82,7 +82,7 @@ public class Tower : MonoBehaviour
             global.Score.Gameover();
         }
 
-        if (mainCamera.transform.position.y > CAMERA_WRAP_LIMIT)
+        if (mainCamera.PosY() > CAMERA_WRAP_LIMIT)
         {
             WrapTowerScrolling();
         }
@@ -125,7 +125,7 @@ public class Tower : MonoBehaviour
         while (floors.Count > 0)
         {
             var floor = floors.Peek();
-            float y = floor.transform.position.y;
+            float y = floor.PosY();
             if (y < minY || maxY < y)
             {
                 Debug.Log($"Floor Destroyed: {floor.GetComponent<Floor>().FloorNumber}");
@@ -148,7 +148,7 @@ public class Tower : MonoBehaviour
 
     private void CreateRandomFloor(long floorNum, float y)
     {
-        float width = (4 + Random.Range(0.0f, 2.0f) + Random.Range(0.0f, 2.0f)) * 32.0f / PPU;
+        float width = (5 + Random.Range(0.0f, 2.0f) + Random.Range(0.0f, 2.0f)) * 16.0f / PPU;
         float x_min = Global.TOWER_LEFT_WALL_X + width / 2;
         float x_max = Global.TOWER_RIGHT_WALL_X - width / 2;
         CreateFloor(floorNum, Random.Range(x_min, x_max), y, width);
@@ -185,7 +185,7 @@ public class Tower : MonoBehaviour
     // The available range is the area where floors are prepared
     private void GetAvailableRange(out float minY, out float maxY)
     {
-        float cameraY = mainCamera.transform.position.y;
+        float cameraY = mainCamera.PosY();
         minY = cameraY - PRESENTATION_HEIGHT;
         maxY = cameraY + PRESENTATION_HEIGHT;
     }

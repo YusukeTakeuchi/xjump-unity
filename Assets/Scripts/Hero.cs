@@ -62,7 +62,7 @@ public class Hero : MonoBehaviour
             // jump has started?
             if (Keyboard.current.upArrowKey.isPressed)
             {
-                jumpAccelerationCount = (int)(7 + Mathf.Abs(vx) * PPU / 2);
+                jumpAccelerationCount = (int)(8 + Mathf.Abs(vx) * PPU / 2);
                 vy = VelocityYWhileJumping(jumpAccelerationCount);
             }
             else
