@@ -1,10 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Lib.PositionUtil;
 
 public class Tower : MonoBehaviour
 {
     private GameObject floorPrefab;
+    private GameObject hero;
 
     public const float PPU = Global.PPU;
 
@@ -19,6 +21,8 @@ public class Tower : MonoBehaviour
     // designating the length from the center of the camera
     public const float PRESENTATION_HEIGHT = 4.8f;
     public const float CAMERA_WRAP_LIMIT = 9.6f;
+
+    public const float BOOST_OFFSET = 1.6f;
 
     private GameObject mainCamera;
 
@@ -37,6 +41,7 @@ public class Tower : MonoBehaviour
     void Start()
     {
         floorPrefab = Resources.Load("Prefabs/Floor") as GameObject;
+        hero = GameObject.FindWithTag("Hero");
 
         mainCamera = Camera.main.gameObject;
 
@@ -60,6 +65,11 @@ public class Tower : MonoBehaviour
         {
             fallCount -= FALL_COUNT_LIMIT;
             Fall();            
+        }
+        if (hero.PosY() > mainCamera.PosY() + BOOST_OFFSET)
+        {
+            fallCount = 0;
+            Fall();
         }
     }
 

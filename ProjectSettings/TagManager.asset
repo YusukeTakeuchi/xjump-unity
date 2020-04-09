@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Floor
   - Score
+  - Hero
   layers:
   - Default
   - TransparentFX
