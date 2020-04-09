@@ -30,6 +30,7 @@ public class Hero : MonoBehaviour
     private Vector3 SpriteSize =>
         GetComponent<SpriteRenderer>().bounds.size;
 
+    private Animator animator;
 
     // Start is called before the first frame update
     void Start()
@@ -37,6 +38,7 @@ public class Hero : MonoBehaviour
         this.vx = 0;
         this.vy = 0;
         this.jumpAccelerationCount = 0;
+        this.animator = GetComponent<Animator>();
     }
 
     // Update is called once per frame
@@ -72,10 +74,7 @@ public class Hero : MonoBehaviour
         ProcessHorizontalAcceleration(standing);
         ProcessVerticalAcceleration(standing);
 
-        // TODO: set direction
-
-
-
+        UpdateAnimation(standing);
     }
 
     private void CheckHorizontalWallCollision()
@@ -164,6 +163,22 @@ public class Hero : MonoBehaviour
                 {
                     vy = TerminalVelocityY;
                 }
+            }
+        }
+    }
+
+    private void UpdateAnimation(bool standing)
+    {
+        this.animator.SetBool("Standing", standing);
+        this.animator.SetBool("GoingUpward", this.vy >= 0);
+        if (this.vx != 0.0f)
+        {
+            var scale = this.transform.localScale;
+            float transformSign = -Mathf.Sign(this.vx);
+            if (scale.x * transformSign < 0) // dir changed?
+            {
+                scale.x = -scale.x; // flip
+                this.transform.localScale = scale;
             }
         }
     }
