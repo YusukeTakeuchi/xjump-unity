@@ -11,8 +11,10 @@ public class Tower : MonoBehaviour
     public const long FALLING_SPEED_MAX = 4999;
     public const long FALL_COUNT_LIMIT = 20000;
 
+    public const int BIG_FLOOR_INTERVAL = 5;
+
     public const float BOTTOM_FLOOR_Y = -3.0f;
-    public const float FLOOR_INTERVAL = 80.0f / PPU;
+    public const float FLOOR_INTERVAL = 160.0f / PPU;
     // indicates the area where objects are available by
     // designating the length from the center of the camera
     public const float PRESENTATION_HEIGHT = 4.8f;
@@ -21,7 +23,10 @@ public class Tower : MonoBehaviour
     private GameObject mainCamera;
 
     private long bottomFloorNumber;
-    private long lastCreatedFloorNumber;
+    //private long lastCreatedFloorNumber;
+    private long nextFloorNumberToCreate;
+
+    public long InitialFallingSpeed;
 
     private long fallingSpeed = 0;
     private long fallCount = 0;
@@ -36,7 +41,9 @@ public class Tower : MonoBehaviour
         mainCamera = Camera.main.gameObject;
 
         bottomFloorNumber = 0;
-        lastCreatedFloorNumber = 0;
+        nextFloorNumberToCreate = 0;
+
+        fallingSpeed = InitialFallingSpeed;
 
         PrepareAvailableFloors();
     }
@@ -58,23 +65,56 @@ public class Tower : MonoBehaviour
 
     private void PrepareAvailableFloors()
     {
-        float cameraY = mainCamera.transform.position.y;
-        float minY = cameraY - PRESENTATION_HEIGHT;
-        float maxY = cameraY + PRESENTATION_HEIGHT;
-
-        long floorNum = lastCreatedFloorNumber + 1;
-        float y = BOTTOM_FLOOR_Y + (floorNum - bottomFloorNumber) * FLOOR_INTERVAL;
+        GetAvailableRange(out float minY, out float maxY);
+        float y = GetYForFloorNumber(nextFloorNumberToCreate);
         while (y <= maxY)
         {
             if (minY <= y)
             {
-                // TODO: implement checking big floor
-                CreateRandomFloor(floorNum, y);
-                lastCreatedFloorNumber = floorNum;
+                if (nextFloorNumberToCreate % BIG_FLOOR_INTERVAL == 0)
+                {
+                    CreateBigFloor(nextFloorNumberToCreate, y);
+                }
+                else
+                {
+                    CreateRandomFloor(nextFloorNumberToCreate, y);
+                }
+                nextFloorNumberToCreate++;
             }
-            floorNum++;
-            y = BOTTOM_FLOOR_Y + (floorNum - bottomFloorNumber) * FLOOR_INTERVAL;
+            y = GetYForFloorNumber(nextFloorNumberToCreate);
         }
+    }
+
+    private float GetYForFloorNumber(long floorNumber) =>
+        BOTTOM_FLOOR_Y + (floorNumber - bottomFloorNumber) * FLOOR_INTERVAL;
+
+
+    private void CleanUnavailableFloors()
+    {
+        GetAvailableRange(out float minY, out float maxY);
+
+        while (floors.Count > 0)
+        {
+            var floor = floors.Peek();
+            float y = floor.transform.position.y;
+            if (y < minY || maxY < y)
+            {
+                Debug.Log($"Floor Destroyed: {floor.GetComponent<Floor>().FloorNumber}");
+                floors.Dequeue();
+                Destroy(floor);
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    private void CreateBigFloor(long floorNum, float y)
+    {
+        float x = (Global.TOWER_LEFT_WALL_X + Global.TOWER_RIGHT_WALL_X) / 2.0f;
+        float width = Global.TOWER_RIGHT_WALL_X - Global.TOWER_LEFT_WALL_X;
+        CreateFloor(floorNum, x, y, width);
     }
 
     private void CreateRandomFloor(long floorNum, float y)
@@ -109,8 +149,18 @@ public class Tower : MonoBehaviour
     private void Fall()
     {
         PrepareAvailableFloors();
+        CleanUnavailableFloors();
         var position = mainCamera.transform.position;
         position.y += 0.08f;
         mainCamera.transform.position = position;
+    }
+
+    // The available range is the area where floors are prepared
+    private void GetAvailableRange(out float minY, out float maxY)
+    {
+        float cameraY = mainCamera.transform.position.y;
+        minY = cameraY - PRESENTATION_HEIGHT;
+        maxY = cameraY + PRESENTATION_HEIGHT;
+
     }
 }

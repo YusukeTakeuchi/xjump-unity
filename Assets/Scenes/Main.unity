@@ -166,12 +166,12 @@ PrefabInstance:
     - target: {fileID: 1914934666176136015, guid: 949ace7309acf472e970a668836d4bd8,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.27
+      value: -8
       objectReference: {fileID: 0}
     - target: {fileID: 1914934666176136015, guid: 949ace7309acf472e970a668836d4bd8,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -2.82
+      value: -3
       objectReference: {fileID: 0}
     - target: {fileID: 1914934666176136015, guid: 949ace7309acf472e970a668836d4bd8,
         type: 3}
@@ -250,6 +250,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 643aa7207ed174cb78caf1d17510ced1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  InitialFallingSpeed: 2000
 --- !u!212 &399611422
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -600,6 +601,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: WallRight
       objectReference: {fileID: 0}
+    - target: {fileID: 1619623252616978070, guid: f85879af2ed5f46b191d9e9e017c565a,
+        type: 3}
+      propertyPath: m_SortingOrder
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1619623252616978071, guid: f85879af2ed5f46b191d9e9e017c565a,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -825,6 +831,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: WallLeft
+      objectReference: {fileID: 0}
+    - target: {fileID: 1619623252616978070, guid: f85879af2ed5f46b191d9e9e017c565a,
+        type: 3}
+      propertyPath: m_SortingOrder
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1619623252616978071, guid: f85879af2ed5f46b191d9e9e017c565a,
         type: 3}
