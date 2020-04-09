@@ -27,32 +27,9 @@ public class Hero : MonoBehaviour
 
     private int jumpAccelerationCount;
 
-    private bool isOnGround = false;
-
     private Vector3 SpriteSize =>
         GetComponent<SpriteRenderer>().bounds.size;
 
-    private void OnGUI()
-    {
-        var guiStyle = new GUIStyle();
-        guiStyle.fontSize = 32;
-        guiStyle.alignment = TextAnchor.MiddleRight;
-        GUI.Label(
-            new Rect()
-            {
-                width = 128,
-                height = 32,
-                x = Screen.width / 2,
-                y = Screen.height - 32,
-            }, (isOnGround ? "Ground" : "Air") + $" {DebugText()}", guiStyle
-        );
-
-    }
-
-    private string DebugText()
-    {
-        return "";
-    }
 
     // Start is called before the first frame update
     void Start()
@@ -69,9 +46,6 @@ public class Hero : MonoBehaviour
 
         CheckHorizontalWallCollision();
 
-        // TODO: judge fallen
-
-        //float? standingFloorTopMaybe = StandingFloorTop();
         GameObject standingFloor = GetStandingFloor();
         bool standing = false;
 
@@ -86,7 +60,7 @@ public class Hero : MonoBehaviour
             // jump has started?
             if (Keyboard.current.upArrowKey.isPressed)
             {
-                jumpAccelerationCount = (int)(7 + Mathf.Abs(vx) * PPU / 4);
+                jumpAccelerationCount = (int)(7 + Mathf.Abs(vx) * PPU / 2);
                 vy = VelocityYWhileJumping(jumpAccelerationCount);
             }
             else
@@ -94,9 +68,6 @@ public class Hero : MonoBehaviour
                 standing = true;
             }
         }
-
-        isOnGround = standing;
-
 
         ProcessHorizontalAcceleration(standing);
         ProcessVerticalAcceleration(standing);
