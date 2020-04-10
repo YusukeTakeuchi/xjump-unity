@@ -17,7 +17,7 @@ public class Score : MonoBehaviour
         set
         {
             floor = value;
-            SetScoreText($"{floor,4} F / Level {Speed/100}");
+            SetScoreText($"{floor,4} F");
         }
     }
 
